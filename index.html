@@ -60,9 +60,7 @@
                     উত্তর না দিলে তুমি গে
                 </h1>
                 <p id="sub-heading" class="text-gray-500 text-base sm:text-lg">
-                    এই প্রশ্নগুলার উত্তর দিলে পুরষ্কার আছে। খাইতে না পারলেও কামে দিব।
-                <p id="sub-heading" class="text-gray-500 text-base sm:text-lg">
-                     (বাংলায় উত্তর দিস হারামজাদা)
+                    ৭টি প্রশ্নের উত্তর দিলে পুরষ্কার আছে। খাইতে না পারলেও কামে দিব।(বাংলায় উত্তর দিস হারামজাদা)
                 </p>
                 <p id="creator-info" class="text-red-500 text-base sm:text-lg">
                     CREATOR - arrogance_26(Instagram)
@@ -71,7 +69,7 @@
 
             <div id="quiz-view">
                 <div class="mb-6">
-                    <p id="question-counter" class="text-sm font-semibold text-primary-teal mb-2">প্রশ্ন 1 of 5</p>
+                    <p id="question-counter" class="text-sm font-semibold text-primary-teal mb-2">প্রশ্ন 1 of 7</p>
                     <h2 id="question-text" class="text-xl font-bold text-gray-800 mb-4">
                         এখানে প্রথম প্রশ্নটি দেখানো হবে।
                     </h2>
@@ -184,15 +182,15 @@
         let userId = null;
         let isAuthReady = false;
 
+        // প্রশ্ন সংখ্যা ৭ করা হলো এবং নতুন প্রশ্ন যোগ করা হলো 
         const questions = [
-            "নাম কি তোমার চোদনা?",  
-            "বয়স কত?(তর আব্বায় জানে নি তুই যে এনে?)",     
+            "নাম কি তোমার চোদনা?", 
+            "বয়স কত?(তর আব্বায় জানে নি তুই যে এনে?)", 
             "ডেইলি হাগ নি?(না হাগলে গু সব মাথায় উইঠা যাইব)",
             "আগে যে হাত মারতা এহনো কি মার?(হ্যা বা না)",
             "আগের প্রশ্নে হ্যা বা না ছাড়া অন্য উত্তর দিস?(অন্য কিছু উত্তর দিলে তুমি গে)",
             "তুমি কি তোমার আব্বুর আসল ছেলে?(DNA Test ছাড়া জানো কেম্নে মিছা কথা কইলা তাইলে)",
-            "তোমার কি ১ মিনিট এর আগে আউট হইয়া যায়?(সাগর কলা না সবরি কলা?)"
-     
+            "তোমার কি ১ মিনিট এর আগে আউট হইয়া যায়?(সাগর কলা না সবরি কলা?)" 
         ];
         
         const finalImageUrl = "https://th.bing.com/th/id/OIP.BD03pCKF2NaqDq6eR44L5AHaEK?w=264&h=180&c=7&r=0&o=7&cb=ucfimg2&pid=1.7&rm=3&ucfimg=1"; 
@@ -313,11 +311,14 @@
         }
         
         function loadAdminResults() {
+            // যদি Auth প্রস্তুত না থাকে, তবে একটি লোডিং বার্তা দেখাবে 
             if (!isAuthReady) {
-                adminStatus.textContent = "অ্যাডমিন ডেটা লোড করার জন্য অথেন্টিকেশন প্রস্তুত নয়।";
-                return;
+                adminStatus.textContent = "অনুগ্রহ করে অপেক্ষা করো... অ্যাডমিন ডেটা লোড করার জন্য অথেন্টিকেশন প্রস্তুত হচ্ছে।";
+                // যেহেতু onSnapshot ব্যবহার করা হয়েছে, তাই এটি প্রস্তুত হলে স্বয়ংক্রিয়ভাবে লোড করবে।
+                return; // Auth প্রস্তুত না হলে রিকোয়েস্ট বন্ধ রাখা হলো।
             }
             
+            // Auth প্রস্তুত হলে, ডেটা লোড শুরু হবে
             const responsesCollectionRef = collection(db, getPublicCollectionPath('quiz_responses'));
             const q = query(responsesCollectionRef); 
             
@@ -336,11 +337,13 @@
                     allDocs.sort((a, b) => b.lastActive - a.lastActive);
 
                     allDocs.forEach((docData) => {
+                        // যদি প্রশ্ন সংখ্যা পরিবর্তন হয়, তবুও এই লজিকটি সঠিক প্রশ্নটি খুঁজে নেবে
                         const answers = docData.answers ? JSON.parse(docData.answers) : new Array(questions.length).fill(''); 
                         const completed = docData.completed ? 'সম্পূর্ণ' : 'অসম্পূর্ণ';
                         const lastActiveTime = docData.lastActive ? new Date(docData.lastActive).toLocaleString('bn-BD') : 'জানা নেই';
                         
                         let answersHtml = answers.map((answer, index) => {
+                            // কোডের মধ্যে থাকা নতুন ৭টি প্রশ্ন ব্যবহার করা হবে
                             const questionText = questions[index] || `প্রশ্ন ${index + 1}`; 
                             return `<div class="mt-2 p-2 bg-gray-100 rounded-lg">
                                 <p class="text-sm font-semibold text-gray-700">প্রশ্ন ${index + 1}: ${questionText}</p>
@@ -376,6 +379,7 @@
                 return;
             }
 
+            // প্রশ্নের সংখ্যা ৭ অনুযায়ী আপডেট হবে
             questionCounter.textContent = `প্রশ্ন ${currentQuestionIndex + 1} of ${questions.length}`;
             questionText.textContent = questions[currentQuestionIndex];
             
@@ -462,6 +466,8 @@
         function showAdminPanel() {
             quizContainer.classList.add('hidden');
             adminView.classList.remove('hidden');
+            
+            // Admin Panel খোলার সাথে সাথে ডেটা লোড করার চেষ্টা করা হলো
             loadAdminResults();
         }
 
@@ -492,8 +498,12 @@
                         
                         await saveVisitCount(userId);
                         loadVisitCount();
-
                         loadUserAnswers(userId);
+                        
+                        // Auth রেডি হওয়ার পর যদি Admin Panel খোলা থাকে, তবে ডেটা লোড করা হবে
+                        if (adminView.classList.contains('hidden') === false) {
+                            loadAdminResults(); 
+                        }
 
                     } else if (!isAuthReady) {
                         if (initialAuthToken) {
