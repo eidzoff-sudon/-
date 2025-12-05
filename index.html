@@ -3,16 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>হা কইরা চাইয়া রইছছ কে ক্লিক কর</title>
-    <!-- Load Tailwind CSS -->
+    <title>হা কইরা চাইয়া রইছছ কে ক্লিক কর</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-        }
-        .container-card {
-            max-width: 600px;
+            background-color: #f8fafc; 
         }
         .reveal-img {
             max-height: 400px;
@@ -24,6 +20,13 @@
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
         }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        #admin-results-container {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
     </style>
     <script>
         tailwind.config = {
@@ -32,6 +35,8 @@
                     colors: {
                         'primary-teal': '#14b8a6',
                         'teal-hover': '#0d9488',
+                        'save-action': '#4f46e5',
+                        'save-hover': '#4338ca',
                     }
                 }
             }
@@ -40,170 +45,382 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
-    <!-- Main Container Card -->
-    <div id="quiz-container" class="container-card w-full bg-white p-6 sm:p-10 rounded-2xl shadow-2xl transition-all duration-500">
+    <div class="w-full max-w-2xl">
         
-        <header class="text-center mb-8">
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2">
-                উত্তর না দিলে তুমি গে
-            </h1>
-            <p id="sub-heading" class="text-gray-500 text-base sm:text-lg">
-                ৫টি প্রশ্নের উত্তর দিলে পুরষ্কার আছে। খাইতে না পারলেও কামে দিব।(বাংলায় উত্তর দিস হারামজাদা)
-            <p id="sub-heading" class="text-red-500 text-base sm:text-lg">
-                CREATOR - arrogance_26(Instagram)
-            </p>
-        </header>
+        <div id="quiz-container" class="w-full bg-white p-6 sm:p-10 rounded-2xl shadow-2xl transition-all duration-500 border border-gray-200 relative">
+            
+            <button id="admin-login-button"
+                    class="absolute top-4 right-4 sm:top-6 sm:right-6 px-3 py-1 text-xs font-semibold rounded-lg bg-indigo-100 text-save-action hover:bg-indigo-200 transition duration-150 shadow-md z-10"
+                    onclick="openAdminLogin()">
+                Admins Vault
+            </button>
 
-        <!-- Quiz Area (Question View) -->
-        <div id="quiz-view">
-            <div class="mb-6">
-                <p id="question-counter" class="text-sm font-semibold text-primary-teal mb-2">প্রশ্ন 1 of 5</p>
-                <h2 id="question-text" class="text-xl font-bold text-gray-800 mb-4">
-                    এখানে প্রথম প্রশ্নটি দেখানো হবে।
-                </h2>
-                <textarea id="answer-input" rows="4" 
-                          class="w-full p-3 border border-gray-300 rounded-xl focus:ring-primary-teal focus:border-primary-teal transition duration-150 shadow-inner"
-                          placeholder="এখানে তোমার উত্তর লেখো..."></textarea>
-                <p id="error-message" class="text-sm text-red-500 mt-2 hidden">
-                    হালার ঘরে হালা উত্তর দে অশিক্ষিত চোদা।
+            <header class="text-center mb-8 pt-6">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2">
+                    উত্তর না দিলে তুমি গে
+                </h1>
+                <p id="sub-heading" class="text-gray-500 text-base sm:text-lg">
+                    এই প্রশ্নগুলার উত্তর দিলে পুরষ্কার আছে। খাইতে না পারলেও কামে দিব।
+                <p id="sub-heading" class="text-gray-500 text-base sm:text-lg">
+                     (বাংলায় উত্তর দিস হারামজাদা)
                 </p>
+                <p id="creator-info" class="text-red-500 text-base sm:text-lg">
+                    CREATOR - arrogance_26(Instagram)
+                </p>
+            </header>
+
+            <div id="quiz-view">
+                <div class="mb-6">
+                    <p id="question-counter" class="text-sm font-semibold text-primary-teal mb-2">প্রশ্ন 1 of 5</p>
+                    <h2 id="question-text" class="text-xl font-bold text-gray-800 mb-4">
+                        এখানে প্রথম প্রশ্নটি দেখানো হবে।
+                    </h2>
+                    <textarea id="answer-input" rows="4" 
+                            class="w-full p-3 border border-gray-300 rounded-xl focus:ring-primary-teal focus:border-primary-teal transition duration-150 shadow-inner"
+                            placeholder="এখানে তোমার উত্তর লেখো..."></textarea>
+                    <p id="error-message" class="text-sm text-red-500 mt-2 hidden">
+                        হালার ঘরে হালা উত্তর দে অশিক্ষিত চোদা।
+                    </p>
+                </div>
+
+                <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+                    <button id="prev-button" 
+                            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-150 disabled:opacity-50"
+                            onclick="prevQuestion()" disabled>
+                        গু খাই
+                    </button>
+                    <button id="next-button" 
+                            class="px-6 py-2 border border-transparent rounded-lg shadow-lg text-white bg-primary-teal hover:bg-teal-hover transition duration-300 ease-in-out transform hover:scale-[1.01]"
+                            onclick="nextQuestion()">
+                        পরবর্তী প্রশ্ন
+                    </button>
+                </div>
             </div>
 
-            <!-- Navigation Buttons -->
-            <div class="flex justify-between items-center pt-4 border-t border-gray-100">
-                <button id="prev-button" 
-                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-150 disabled:opacity-50"
-                        onclick="prevQuestion()" disabled>
-                    গু খাই
+            <div id="result-view" class="hidden text-center py-8">
+                <h2 class="text-2xl sm:text-3xl font-bold text-save-action mb-6">
+                    সাবাস আমার ছেলে।
+                </h2>
+                <p class="text-lg text-gray-700 mb-6">
+                    তুমি সব প্রশ্নের উত্তর দিছো অহন এইডা লইয়া বাথরুমে যাও।
+                </p>
+                
+                <img id="final-image" 
+                    src="https://th.bing.com/th/id/OIP.BD03pCKF2NaqDq6eR44L5AHaEK?w=264&h=180&c=7&r=0&o=7&cb=ucfimg2&pid=1.7&rm=3&ucfimg=1" 
+                    alt="The secret image revealed after completing the quiz." 
+                    class="reveal-img mx-auto rounded-xl shadow-xl border-4 border-save-action/50">
+
+                <p class="mt-8 text-sm text-gray-500">
+                    তুমি চাইলে আবার শুরু করতে পারো।
+                </p>
+                <button class="mt-4 px-6 py-2 border border-transparent rounded-lg shadow-lg text-white bg-gray-600 hover:bg-gray-700 transition duration-300"
+                        onclick="window.location.reload()">
+                    আবার শুরু করো
                 </button>
-                <button id="next-button" 
-                        class="px-6 py-2 border border-transparent rounded-lg shadow-lg text-white bg-primary-teal hover:bg-teal-hover transition duration-300 ease-in-out transform hover:scale-[1.01]"
-                        onclick="nextQuestion()">
-                    পরবর্তী প্রশ্ন
-                </button>
+            </div>
+            
+            <footer class="mt-8 pt-4 border-t border-gray-200 text-center">
+                <p id="visitor-count" class="text-sm text-gray-500 font-medium">
+                    ভিজিট লোড হচ্ছে...
+                </p>
+                <p class="text-xs text-gray-400 mt-1">
+                    (এই ভিজিটরের আইডি: <span id="user-id-display" class="font-mono text-xs text-gray-700"></span>)
+                </p>
+            </footer>
+        </div>
+        
+        <div id="admin-view" class="hidden mt-8 p-6 bg-white rounded-2xl shadow-xl border border-save-action/50">
+            <h3 class="text-2xl font-bold text-save-action mb-4 border-b pb-2 flex justify-between items-center">
+                অ্যাডমিন ভল্ট: সব ইউজারের উত্তর
+                <button onclick="hideAdminPanel()" class="text-gray-500 hover:text-red-600 text-sm font-normal">বন্ধ করো</button>
+            </h3>
+            <div id="admin-results-container">
+                <p id="admin-status" class="text-gray-500 italic">
+                    উত্তর লোড হচ্ছে...
+                </p>
             </div>
         </div>
 
-        <!-- Result Area (Image Reveal View) -->
-        <div id="result-view" class="hidden text-center py-8">
-            <h2 class="text-2xl sm:text-3xl font-bold text-primary-teal mb-6">
-                সাবাস আমার ছেলে।
-            </h2>
-            <p class="text-lg text-gray-700 mb-6">
-                তুমি সব প্রশ্নের উত্তর দিছো অহন এইডা লইয়া বাথরুমে যাও।
-            </p>
-            
-            <img id="final-image" 
-                 src="https://placehold.co/800x600/14b8a6/ffffff?text=The+Great+Reveal" 
-                 alt="The secret image revealed after completing the quiz." 
-                 class="reveal-img mx-auto rounded-xl shadow-xl border-4 border-primary-teal/50">
+    </div>
 
-            <p class="mt-8 text-sm text-gray-500">
-                তুমি চাইলে আবার শুরু করতে পারো।
+    <div id="admin-login-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm transform transition-all duration-300">
+            <h4 class="text-xl font-bold text-save-action mb-4">Admins Vault পাসওয়ার্ড</h4>
+            <input type="password" id="admin-password-input" 
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-save-action focus:border-save-action transition duration-150 shadow-inner mb-3"
+                   placeholder="পাসওয়ার্ড দিন..."
+                   autocomplete="off">
+            <p id="admin-login-error" class="text-sm text-red-500 mb-4 hidden">
+                পাসওয়ার্ড ভুল হয়েছে। আবার চেষ্টা করো।
             </p>
-            <button class="mt-4 px-6 py-2 border border-transparent rounded-lg shadow-lg text-white bg-gray-600 hover:bg-gray-700 transition duration-300"
-                    onclick="window.location.reload()">
-                আবার শুরু করো
-            </button>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeAdminLogin()" 
+                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                    বাতিল
+                </button>
+                <button onclick="checkAdminPassword()" 
+                        class="px-4 py-2 text-white bg-save-action rounded-lg hover:bg-save-hover transition">
+                    প্রবেশ করো
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- JavaScript Logic for Quiz Flow -->
-    <script>
-        // 1. Define the Questions (তুমি এখান থেকে প্রশ্ন পরিবর্তন করতে পারো)
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, doc, setDoc, onSnapshot, runTransaction, getDoc, collection, query
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        const ADMIN_PASSWORD = 'ahy018827'; 
+
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+
         const questions = [
-            { id: 1, text: "ডেইলি হাগ নি?(না হাগলে গু সব মাথায় উইঠা যাইব)" },
-            { id: 2, text: "আগে যে হাত মারতা এহনো কি মার?(হ্যা বা না)" },
-            { id: 3, text: "আগের প্রশ্নে হ্যা বা না ছাড়া অন্য উত্তর দিস?(অন্য কিছু উত্তর দিলে তুমি গে)" },
-            { id: 4, text: "তুমি কি তোমার আব্বুর আসল ছেলে?(DNA Test ছাড়া জানো কেম্নে মিছা কথা কইলা তাইলে)" },
-            { id: 5, text: "তোমার কি ১ মিনিট এর আগে আউট হইয়া যায়?(সাগর কলা না সবরি কলা?)" }
+            "নাম কি তোমার চোদনা?",  
+            "বয়স কত?(তর আব্বায় জানে নি তুই যে এনে?)",     
+            "ডেইলি হাগ নি?(না হাগলে গু সব মাথায় উইঠা যাইব)",
+            "আগে যে হাত মারতা এহনো কি মার?(হ্যা বা না)",
+            "আগের প্রশ্নে হ্যা বা না ছাড়া অন্য উত্তর দিস?(অন্য কিছু উত্তর দিলে তুমি গে)",
+            "তুমি কি তোমার আব্বুর আসল ছেলে?(DNA Test ছাড়া জানো কেম্নে মিছা কথা কইলা তাইলে)",
+            "তোমার কি ১ মিনিট এর আগে আউট হইয়া যায়?(সাগর কলা না সবরি কলা?)"
+     
         ];
-
-        // 2. Define the Final Image (তোমার নিজের ছবির URL এখানে দাও)
-        // **এখানে তোমার ছবির URL বসাও:**
-        // ফিক্স: URL স্ট্রিং-এ ক্লোজিং কোটেশন মার্ক (") এবং সেমিকোলন (;) যোগ করা হয়েছে।
-        const finalImageUrl = "https://th.bing.com/th/id/OIP.BD03pCKF2NaqDq6eR44L5AHaEK?w=264&h=180&c=7&r=0&o=7&cb=ucfimg2&pid=1.7&rm=3&ucfimg=1";
         
-        // State Variables
+        const finalImageUrl = "https://th.bing.com/th/id/OIP.BD03pCKF2NaqDq6eR44L5AHaEK?w=264&h=180&c=7&r=0&o=7&cb=ucfimg2&pid=1.7&rm=3&ucfimg=1"; 
+        
         let currentQuestionIndex = 0;
-        const userAnswers = new Array(questions.length).fill(''); // Array to store answers
+        let userAnswers = new Array(questions.length).fill("");
 
-        // DOM Elements
+        const quizContainer = document.getElementById('quiz-container');
         const quizView = document.getElementById('quiz-view');
         const resultView = document.getElementById('result-view');
-        const questionCounter = document.getElementById('question-counter');
+        const adminView = document.getElementById('admin-view');
         const questionText = document.getElementById('question-text');
+        const questionCounter = document.getElementById('question-counter');
         const answerInput = document.getElementById('answer-input');
         const prevButton = document.getElementById('prev-button');
         const nextButton = document.getElementById('next-button');
         const errorMessage = document.getElementById('error-message');
         const finalImage = document.getElementById('final-image');
+        const adminLoginModal = document.getElementById('admin-login-modal');
+        const adminLoginError = document.getElementById('admin-login-error');
+        const adminResultsContainer = document.getElementById('admin-results-container');
+        const adminStatus = document.getElementById('admin-status');
+        const visitorCountElement = document.getElementById('visitor-count');
 
-        /**
-         * Loads the current question and populates the UI.
-         */
-        function loadQuestion() {
-            const currentQuestion = questions[currentQuestionIndex];
-            
-            // Update counter and text
-            questionCounter.textContent = `প্রশ্ন ${currentQuestionIndex + 1} of ${questions.length}`;
-            questionText.textContent = currentQuestion.text;
-            
-            // Load previous answer (if exists)
-            answerInput.value = userAnswers[currentQuestionIndex] || '';
-
-            // Update button visibility/state
-            prevButton.disabled = currentQuestionIndex === 0;
-            
-            // Update next button text for the last question
-            if (currentQuestionIndex === questions.length - 1) {
-                nextButton.textContent = 'এই লও পুরষ্কার এর চোদন';
-                nextButton.classList.remove('bg-primary-teal', 'hover:bg-teal-hover');
-                nextButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
-            } else {
-                nextButton.textContent = 'পরবর্তী প্রশ্ন';
-                nextButton.classList.add('bg-primary-teal', 'hover:bg-teal-hover');
-                nextButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
-            }
-            
-            // Hide error message
-            errorMessage.classList.add('hidden');
+        function getPublicCollectionPath(collectionName) {
+            return `artifacts/${appId}/public/data/${collectionName}`;
         }
 
-        /**
-         * Saves the current answer and moves to the next question or the result screen.
-         */
-        function nextQuestion() {
-            const currentAnswer = answerInput.value.trim();
+        async function saveAnswer() {
+            if (!isAuthReady || !userId) return;
 
-            if (currentAnswer === '') {
-                // Show error if answer is empty (required)
-                errorMessage.classList.remove('hidden');
+            const answersData = {
+                answers: JSON.stringify(userAnswers), 
+                completed: currentQuestionIndex === questions.length,
+                timestamp: new Date().toISOString(),
+                shortId: userId.substring(0, 8), 
+                lastActive: new Date().getTime() 
+            };
+            
+            try {
+                const userDocRef = doc(db, getPublicCollectionPath('quiz_responses'), userId);
+                await setDoc(userDocRef, answersData, { merge: true });
+                console.log("Answers saved for user:", userId);
+            } catch (e) {
+                console.error("Error saving answers:", e);
+            }
+        }
+        
+        async function loadUserAnswers(currentUserId) {
+            if (!isAuthReady) return;
+            try {
+                const userDocRef = doc(db, getPublicCollectionPath('quiz_responses'), currentUserId);
+                const docSnap = await getDoc(userDocRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.answers) {
+                        userAnswers = JSON.parse(data.answers);
+                        let nextIndex = userAnswers.findIndex(answer => answer === "");
+                        if(nextIndex === -1 && data.completed) {
+                            currentQuestionIndex = questions.length; 
+                        } else {
+                            currentQuestionIndex = nextIndex !== -1 ? nextIndex : 0;
+                        }
+                        
+                        if(data.completed) {
+                            showResult();
+                        }
+                    }
+                }
+                loadQuestion();
+            } catch (e) {
+                console.error("Error loading answers:", e);
+                loadQuestion();
+            }
+        }
+
+        async function saveVisitCount(currentUserId) {
+            const userVisitedDocRef = doc(db, getPublicCollectionPath('visits'), currentUserId);
+            
+            try {
+                const visitSnap = await getDoc(userVisitedDocRef);
+
+                if (visitSnap.exists()) {
+                    return; 
+                }
+
+                const counterDocRef = doc(db, getPublicCollectionPath('meta'), 'visitor_count');
+                
+                await runTransaction(db, async (transaction) => {
+                    const counterDoc = await transaction.get(counterDocRef);
+                    const newCount = (counterDoc.exists() ? counterDoc.data().count : 0) + 1;
+                    
+                    transaction.set(counterDocRef, { count: newCount });
+                    transaction.set(userVisitedDocRef, { timestamp: new Date().getTime() });
+                });
+                console.log("Visitor count updated.");
+
+            } catch (e) {
+                console.error("Transaction failed (visitor count):", e);
+            }
+        }
+        
+        function loadVisitCount() {
+            const counterDocRef = doc(db, getPublicCollectionPath('meta'), 'visitor_count');
+            
+            onSnapshot(counterDocRef, (doc) => {
+                if (doc.exists()) {
+                    const count = doc.data().count;
+                    visitorCountElement.textContent = `মোট ভিজিটর: ${count} জন`;
+                } else {
+                    visitorCountElement.textContent = `মোট ভিজিটর: 1 জন`;
+                }
+            }, (error) => {
+                console.error("Error loading visitor count:", error);
+                visitorCountElement.textContent = `ভিজিট কাউন্ট লোড করা যায়নি।`;
+            });
+        }
+        
+        function loadAdminResults() {
+            if (!isAuthReady) {
+                adminStatus.textContent = "অ্যাডমিন ডেটা লোড করার জন্য অথেন্টিকেশন প্রস্তুত নয়।";
                 return;
             }
             
-            // Hide error
-            errorMessage.classList.add('hidden');
+            const responsesCollectionRef = collection(db, getPublicCollectionPath('quiz_responses'));
+            const q = query(responsesCollectionRef); 
             
-            // Save the answer
+            adminStatus.textContent = "উত্তর লোড হচ্ছে...";
+            
+            onSnapshot(q, (snapshot) => {
+                let htmlContent = '';
+                if (snapshot.empty) {
+                    htmlContent = '<p class="text-gray-500 mt-2 p-3 bg-gray-50 rounded-lg">কেউ এখনও কুইজ সম্পন্ন করেনি।</p>';
+                } else {
+                    const allDocs = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+
+                    allDocs.sort((a, b) => b.lastActive - a.lastActive);
+
+                    allDocs.forEach((docData) => {
+                        const answers = docData.answers ? JSON.parse(docData.answers) : new Array(questions.length).fill(''); 
+                        const completed = docData.completed ? 'সম্পূর্ণ' : 'অসম্পূর্ণ';
+                        const lastActiveTime = docData.lastActive ? new Date(docData.lastActive).toLocaleString('bn-BD') : 'জানা নেই';
+                        
+                        let answersHtml = answers.map((answer, index) => {
+                            const questionText = questions[index] || `প্রশ্ন ${index + 1}`; 
+                            return `<div class="mt-2 p-2 bg-gray-100 rounded-lg">
+                                <p class="text-sm font-semibold text-gray-700">প্রশ্ন ${index + 1}: ${questionText}</p>
+                                <p class="text-gray-900 whitespace-pre-wrap">${answer || '<span class="italic text-gray-500">উত্তর দেওয়া হয়নি</span>'}</p>
+                            </div>`
+                        }).join('');
+
+                        htmlContent += `
+                            <div class="p-4 mb-4 bg-white rounded-xl shadow-md border-l-4 border-save-action/70">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-lg font-bold text-gray-800">${docData.shortId}</h4>
+                                    <span class="text-sm font-semibold ${docData.completed ? 'text-green-600' : 'text-yellow-600'}">${completed}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mb-2">ইউজার আইডি: ${docData.id}</p>
+                                <p class="text-xs text-gray-500 mb-2">শেষ সক্রিয়: ${lastActiveTime}</p>
+                                ${answersHtml}
+                            </div>
+                        `;
+                    });
+                }
+                adminResultsContainer.innerHTML = htmlContent;
+                adminStatus.textContent = `মোট উত্তর: ${snapshot.size}টি (রিয়েল-টাইম)`;
+                
+            }, (error) => {
+                console.error("Error loading admin results:", error);
+                adminStatus.textContent = `উত্তর লোড করার সময় ভুল হয়েছে: ${error.message}`;
+            });
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                showResult();
+                return;
+            }
+
+            questionCounter.textContent = `প্রশ্ন ${currentQuestionIndex + 1} of ${questions.length}`;
+            questionText.textContent = questions[currentQuestionIndex];
+            
+            answerInput.value = userAnswers[currentQuestionIndex] || "";
+            
+            prevButton.disabled = currentQuestionIndex === 0;
+            
+            if (currentQuestionIndex === questions.length - 1) {
+                nextButton.textContent = 'এই লও পুরষ্কার এর চোদন';
+                nextButton.classList.add('bg-save-action', 'hover:bg-save-hover');
+                nextButton.classList.remove('bg-primary-teal', 'hover:bg-teal-hover');
+            } else {
+                nextButton.textContent = 'পরবর্তী প্রশ্ন';
+                nextButton.classList.remove('bg-save-action', 'hover:bg-save-hover');
+                nextButton.classList.add('bg-primary-teal', 'hover:bg-teal-hover');
+            }
+            errorMessage.classList.add('hidden'); 
+        }
+
+        function nextQuestion() {
+            const currentAnswer = answerInput.value.trim();
+            
+            if (currentAnswer === "") {
+                errorMessage.classList.remove('hidden');
+                return;
+            } else {
+                errorMessage.classList.add('hidden');
+            }
+            
             userAnswers[currentQuestionIndex] = currentAnswer;
 
             if (currentQuestionIndex < questions.length - 1) {
-                // Move to the next question
                 currentQuestionIndex++;
                 loadQuestion();
+                saveAnswer(); 
             } else {
-                // All questions answered, show result
+                currentQuestionIndex++; 
+                saveAnswer(); 
                 showResult();
             }
         }
 
-        /**
-         * Moves to the previous question.
-         */
         function prevQuestion() {
-            // Save the current answer before moving back (optional but good practice)
             userAnswers[currentQuestionIndex] = answerInput.value.trim();
+            saveAnswer();
             
             if (currentQuestionIndex > 0) {
                 currentQuestionIndex--;
@@ -211,28 +428,91 @@
             }
         }
 
-        /**
-         * Transitions the UI to the result view and displays the image.
-         */
         function showResult() {
             quizView.classList.add('hidden');
             resultView.classList.remove('hidden');
             
-            // Set the final, pre-selected image URL
             finalImage.src = finalImageUrl;
             
-            document.getElementById('sub-heading').classList.add('hidden'); // Clean up header subtext
+            document.getElementById('sub-heading').classList.add('hidden');
+            document.getElementById('creator-info').classList.add('hidden');
         }
 
-        // Initialize the app
-        window.onload = loadQuestion;
+        function openAdminLogin() {
+            adminLoginModal.classList.remove('hidden');
+            document.getElementById('admin-password-input').value = '';
+            adminLoginError.classList.add('hidden');
+        }
+
+        function closeAdminLogin() {
+            adminLoginModal.classList.add('hidden');
+        }
+
+        function checkAdminPassword() {
+            const inputPassword = document.getElementById('admin-password-input').value;
+            if (inputPassword === ADMIN_PASSWORD) {
+                closeAdminLogin();
+                showAdminPanel();
+                adminLoginError.classList.add('hidden');
+            } else {
+                adminLoginError.classList.remove('hidden');
+            }
+        }
+
+        function showAdminPanel() {
+            quizContainer.classList.add('hidden');
+            adminView.classList.remove('hidden');
+            loadAdminResults();
+        }
+
+        function hideAdminPanel() {
+            adminView.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        }
+
+        window.prevQuestion = prevQuestion;
+        window.nextQuestion = nextQuestion;
+        window.openAdminLogin = openAdminLogin;
+        window.closeAdminLogin = closeAdminLogin;
+        window.checkAdminPassword = checkAdminPassword;
+        window.hideAdminPanel = hideAdminPanel;
+        
+        async function initApp() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        isAuthReady = true;
+                        document.getElementById('user-id-display').textContent = userId;
+                        console.log("Firebase Auth Ready. User ID:", userId);
+                        
+                        await saveVisitCount(userId);
+                        loadVisitCount();
+
+                        loadUserAnswers(userId);
+
+                    } else if (!isAuthReady) {
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                document.getElementById('admin-status').textContent = `Firebase error: ${error.message}`;
+                loadQuestion(); 
+            }
+        }
+
+        window.onload = initApp;
+
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
