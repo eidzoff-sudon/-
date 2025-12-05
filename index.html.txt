@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Quiz and Reveal</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .container-card {
+            max-width: 600px;
+        }
+        .reveal-img {
+            max-height: 400px;
+            width: 100%;
+            object-fit: cover;
+            animation: fadeIn 1s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-teal': '#14b8a6',
+                        'teal-hover': '#0d9488',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Main Container Card -->
+    <div id="quiz-container" class="container-card w-full bg-white p-6 sm:p-10 rounded-2xl shadow-2xl transition-all duration-500">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2">
+                উত্তর না দিলে তুমি গে
+            </h1>
+            <p id="sub-heading" class="text-gray-500 text-base sm:text-lg">
+                ৫টি প্রশ্নের উত্তর দিলে পুরষ্কার আছে। খাইতে না পারলেও কামে দিব।
+            </p>
+        </header>
+
+        <!-- Quiz Area (Question View) -->
+        <div id="quiz-view">
+            <div class="mb-6">
+                <p id="question-counter" class="text-sm font-semibold text-primary-teal mb-2">প্রশ্ন 1 of 5</p>
+                <h2 id="question-text" class="text-xl font-bold text-gray-800 mb-4">
+                    এখানে প্রথম প্রশ্নটি দেখানো হবে।
+                </h2>
+                <textarea id="answer-input" rows="4" 
+                          class="w-full p-3 border border-gray-300 rounded-xl focus:ring-primary-teal focus:border-primary-teal transition duration-150 shadow-inner"
+                          placeholder="এখানে তোমার উত্তর লেখো..."></textarea>
+                <p id="error-message" class="text-sm text-red-500 mt-2 hidden">
+                    উত্তর দেওয়া আবশ্যক।
+                </p>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+                <button id="prev-button" 
+                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-150 disabled:opacity-50"
+                        onclick="prevQuestion()" disabled>
+                    গু খাই
+                </button>
+                <button id="next-button" 
+                        class="px-6 py-2 border border-transparent rounded-lg shadow-lg text-white bg-primary-teal hover:bg-teal-hover transition duration-300 ease-in-out transform hover:scale-[1.01]"
+                        onclick="nextQuestion()">
+                    পরবর্তী প্রশ্ন
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Area (Image Reveal View) -->
+        <div id="result-view" class="hidden text-center py-8">
+            <h2 class="text-2xl sm:text-3xl font-bold text-primary-teal mb-6">
+                সাবাস আমার ছেলে।
+            </h2>
+            <p class="text-lg text-gray-700 mb-6">
+                তুমি সব প্রশ্নের উত্তর দিছো অহন এইডা লইয়া বাথরুমে যাও।
+            </p>
+            
+            <img id="final-image" 
+                 src="https://placehold.co/800x600/14b8a6/ffffff?text=The+Great+Reveal" 
+                 alt="The secret image revealed after completing the quiz." 
+                 class="reveal-img mx-auto rounded-xl shadow-xl border-4 border-primary-teal/50">
+
+            <p class="mt-8 text-sm text-gray-500">
+                তুমি চাইলে আবার শুরু করতে পারো।
+            </p>
+            <button class="mt-4 px-6 py-2 border border-transparent rounded-lg shadow-lg text-white bg-gray-600 hover:bg-gray-700 transition duration-300"
+                    onclick="window.location.reload()">
+                আবার শুরু করো
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic for Quiz Flow -->
+    <script>
+        // 1. Define the Questions (তুমি এখান থেকে প্রশ্ন পরিবর্তন করতে পারো)
+        const questions = [
+            { id: 1, text: "ডেইলি হাগ নি?(না হাগলে গু সব মাথায় উইঠা যাইব)" },
+            { id: 2, text: "আগে যে হাত মারতা এহনো কি মার?(হ্যা বা না)" },
+            { id: 3, text: "আগের প্রশ্নে হ্যা বা না ছাড়া অন্য উত্তর দিস?(অন্য কিছু উত্তর দিলে তুমি গে)" },
+            { id: 4, text: "তুমি কি তোমার আব্বুর আসল ছেলে?(DNA Test ছাড়া জানো কেম্নে মিছা কথা কইলা তাইলে)" },
+            { id: 5, text: "তোমার কি ১ মিনিট এর আগে আউট হইয়া যায়?(সাগর কলা না সবরি কলা?)" }
+        ];
+
+        // 2. Define the Final Image (তোমার নিজের ছবির URL এখানে দাও)
+        // **এখানে তোমার ছবির URL বসাও:**
+        // ফিক্স: URL স্ট্রিং-এ ক্লোজিং কোটেশন মার্ক (") এবং সেমিকোলন (;) যোগ করা হয়েছে।
+        const finalImageUrl = "https://th.bing.com/th/id/OIP.BD03pCKF2NaqDq6eR44L5AHaEK?w=264&h=180&c=7&r=0&o=7&cb=ucfimg2&pid=1.7&rm=3&ucfimg=1";
+        
+        // State Variables
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(questions.length).fill(''); // Array to store answers
+
+        // DOM Elements
+        const quizView = document.getElementById('quiz-view');
+        const resultView = document.getElementById('result-view');
+        const questionCounter = document.getElementById('question-counter');
+        const questionText = document.getElementById('question-text');
+        const answerInput = document.getElementById('answer-input');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const errorMessage = document.getElementById('error-message');
+        const finalImage = document.getElementById('final-image');
+
+        /**
+         * Loads the current question and populates the UI.
+         */
+        function loadQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // Update counter and text
+            questionCounter.textContent = `প্রশ্ন ${currentQuestionIndex + 1} of ${questions.length}`;
+            questionText.textContent = currentQuestion.text;
+            
+            // Load previous answer (if exists)
+            answerInput.value = userAnswers[currentQuestionIndex] || '';
+
+            // Update button visibility/state
+            prevButton.disabled = currentQuestionIndex === 0;
+            
+            // Update next button text for the last question
+            if (currentQuestionIndex === questions.length - 1) {
+                nextButton.textContent = 'এই লও পুরষ্কার এর চোদন';
+                nextButton.classList.remove('bg-primary-teal', 'hover:bg-teal-hover');
+                nextButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+            } else {
+                nextButton.textContent = 'পরবর্তী প্রশ্ন';
+                nextButton.classList.add('bg-primary-teal', 'hover:bg-teal-hover');
+                nextButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+            }
+            
+            // Hide error message
+            errorMessage.classList.add('hidden');
+        }
+
+        /**
+         * Saves the current answer and moves to the next question or the result screen.
+         */
+        function nextQuestion() {
+            const currentAnswer = answerInput.value.trim();
+
+            if (currentAnswer === '') {
+                // Show error if answer is empty (required)
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+            
+            // Hide error
+            errorMessage.classList.add('hidden');
+            
+            // Save the answer
+            userAnswers[currentQuestionIndex] = currentAnswer;
+
+            if (currentQuestionIndex < questions.length - 1) {
+                // Move to the next question
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                // All questions answered, show result
+                showResult();
+            }
+        }
+
+        /**
+         * Moves to the previous question.
+         */
+        function prevQuestion() {
+            // Save the current answer before moving back (optional but good practice)
+            userAnswers[currentQuestionIndex] = answerInput.value.trim();
+            
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+            }
+        }
+
+        /**
+         * Transitions the UI to the result view and displays the image.
+         */
+        function showResult() {
+            quizView.classList.add('hidden');
+            resultView.classList.remove('hidden');
+            
+            // Set the final, pre-selected image URL
+            finalImage.src = finalImageUrl;
+            
+            document.getElementById('sub-heading').classList.add('hidden'); // Clean up header subtext
+        }
+
+        // Initialize the app
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
